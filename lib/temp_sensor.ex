@@ -1,0 +1,2 @@
+defmodule TempSensor do
+end
