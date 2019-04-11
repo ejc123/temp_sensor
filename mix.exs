@@ -7,15 +7,15 @@ defmodule TempSensor.MixProject do
     [
       app: :temp_sensor,
       version: "0.1.0",
-      elixir: "~> 1.4",
+      elixir: "~> 1.8",
       target: @target,
-      archives: [nerves_bootstrap: "~> 0.8"],
+      archives: [nerves_bootstrap: "~> 1.0"],
       deps_path: "deps/#{@target}",
       build_path: "_build/#{@target}",
       lockfile: "mix.lock.#{@target}",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
-      aliases: ["loadconfig": [&bootstrap/1]],
+      aliases: [loadconfig: [&bootstrap/1]],
       deps: deps()
     ]
   end
@@ -39,12 +39,19 @@ defmodule TempSensor.MixProject do
   end
 
   def application(_target) do
-    [mod: {TempSensor.Application, []}, extra_applications: [:logger]]
+    [
+      mod: {TempSensor.Application, []},
+      extra_applications: [:logger, :runtime_tools]
+    ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    [{:nerves, "~> 0.10", runtime: false}] ++ deps(@target)
+    [
+      {:nerves, "~> 1.3", runtime: false},
+      {:ring_logger, "~> 0.4"},
+      {:shoehorn, "~> 0.4"}
+    ] ++ deps(@target)
   end
 
   # Specify target specific dependencies
@@ -52,11 +59,10 @@ defmodule TempSensor.MixProject do
 
   defp deps(target) do
     [
-      {:shoehorn, "~> 0.2"},
-      {:nerves_init_gadget, github: "nerves-project/nerves_init_gadget", ref: "dhcp"},
-      #      {:elixir_ale, "~> 1.0"},
-      {:nerves_runtime_shell, "~> 0.1.0"},
-      {:nerves_runtime, "~> 0.5"}
+      {:nerves_init_gadget, "~> 0.5"},
+      # {:elixir_ale, "~> 1.0"},
+      # {:nerves_runtime_shell, "~> 0.1.0"},
+      {:nerves_runtime, "~> 0.6"}
     ] ++ system(target)
   end
 
