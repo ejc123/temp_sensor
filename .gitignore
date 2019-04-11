@@ -20,3 +20,6 @@ erl_crash.dump
 rel/*
 !rel/config.exs
 !rel/vm.args
+
+/.elixir_ls/
+wifi-export.sh
