@@ -28,6 +28,7 @@ end
 
 release :temp_sensor do
   set version: current_version(:temp_sensor)
+  plugin Nerves
   plugin Shoehorn
   if System.get_env("NERVES_SYSTEM") do
     set dev_mode: false
