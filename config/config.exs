@@ -11,60 +11,46 @@ use Mix.Config
 
 config :nerves, :firmware,
    rootfs_overlay: "rootfs_overlay",
-   fwup_conf: "config/rpi0/fwup.conf"
+   #   fwup_conf: "config/rpi0/fwup.conf"
 
-config :logger, level: :debug, backends: [RingLogger]
+config :logger, backends: [RingLogger]
+
 config :shoehorn,
   init: [:nerves_runtime, :nerves_pack],
   app: Mix.Project.config()[:app]
 
-config :nerves_firmware_ssh,
-  authorized_keys: [
-    File.read!(Path.join(System.user_home!, ".ssh/id_rsa.pub"))
-  ]
+config :mdns_lite,
+  # The `host` key specifies what hostnames mdns_lite advertises.  `:hostname`
+  # advertises the device's hostname.local. For the official Nerves systems, this
+  # is "nerves-<4 digit serial#>.local".  mdns_lite also advertises
+  # "nerves.local" for convenience. If more than one Nerves device is on the
+  # network, delete "nerves" from the list.
 
-  #config :nerves_init_gadget,
-  #ifname: "wlan0",
-#  ifname: "eth0",
-#  ifname: "usb0",
-#mdns_domain: nil,
-#  address_method: :dhcp
+  host: [:hostname, "nerves"],
+  ttl: 120,
 
-key_mgmt = System.get_env("NERVES_NETWORK_KEY_MGMT") || "WPA-PSK"
-
-#config :nerves_network, :default,
-#  wlan0: [
-#    ssid: System.get_env("NERVES_NETWORK_SSID"),
-#    psk:  System.get_env("NERVES_NETWORK_PSK"),
-#    key_mgmt: String.to_atom(key_mgmt)
-#  ],
-#eth0: [
-#    ipv4_address_method: :dhcp
-#  ]
-
-config :vintage_net,
-  config: [
-    #{"eth0", %{type: VintageNetEthernet, ipv4: %{method: :dhcp}}},
-    {"wlan0", %{ type: VintageNetWiFi,
-                 vintage_net_wifi: %{
-        networks: [
-          %{
-            key_mgmt: String.to_atom(key_mgmt)
-            ssid: System.get_env("NERVES_NETWORK_SSID"),
-            psk:  System.get_env("NERVES_NETWORK_PSK"),
-          }
-        ]
-      },
-      ipv4: %{method: :dhcp},
-      },
+  # Advertise the following services over mDNS.
+  services: [
+    %{
+      name: "SSH Remote Login Protocol",
+      protocol: "ssh",
+      transport: "tcp",
+      port: 22
+    },
+    %{
+      name: "Secure File Transfer Protocol over SSH",
+      protocol: "sftp-ssh",
+      transport: "tcp",
+      port: 22
+    },
+    %{
+      name: "Erlang Port Mapper Daemon",
+      protocol: "epmd",
+      transport: "tcp",
+      port: 4369
     }
-    {"usb0", %{type: VintageNetDirect}},
   ]
 
-# Import target specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
-# Uncomment to use target specific configurations
-
-#if Mix.target() != :host do
-#  import_config "target.exs"
-#end
+if Mix.target() != :host do
+  import_config "target.exs"
+end
