@@ -3,8 +3,7 @@ use Mix.Config
 keys =
   [
     Path.join([System.user_home!(), ".ssh", "id_rsa.pub"]),
-    Path.join([System.user_home!(), ".ssh", "id_ecdsa.pub"]),
-    Path.join([System.user_home!(), ".ssh", "id_ed25519.pub"])
+    Path.join([System.user_home!(), ".ssh", "id_nerves_ecdsa.pub"])
   ]
   |> Enum.filter(&File.exists?/1)
 
@@ -23,20 +22,18 @@ config :nerves_firmware_ssh,
 key_mgmt = System.get_env("NERVES_NETWORK_KEY_MGMT") || "wpa_psk"
 
 config :vintage_net,
+regulatory_domain: "US",
   config: [
     {"wlan0", %{ type: VintageNetWiFi,
-                 vintage_net_wifi: %{
-        networks: [
-          %{
-            key_mgmt: String.to_atom(key_mgmt),
-            ssid: System.get_env("NERVES_NETWORK_SSID"),
-            psk:  System.get_env("NERVES_NETWORK_PSK"),
-          }
-        ]
+      vintage_net_wifi: %{
+        key_mgmt: String.to_atom(key_mgmt),
+        mode: :client,
+        ssid: System.get_env("NERVES_NETWORK_SSID"),
+        psk:  System.get_env("NERVES_NETWORK_PSK"),
       },
       ipv4: %{method: :dhcp},
       },
-    },
+    }
     {"usb0", %{type: VintageNetDirect}},
   ]
 

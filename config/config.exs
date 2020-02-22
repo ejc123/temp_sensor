@@ -5,19 +5,23 @@
 # is restricted to this project.
 use Mix.Config
 
+config :temp_sensor, target: Mix.target()
+
 # Customize the firmware. Uncomment all or parts of the following
 # to add files to the root filesystem or modify the firmware
 # archive.
 
-config :nerves, :firmware,
+config :nerves, :firmware, 
    rootfs_overlay: "rootfs_overlay",
-   #   fwup_conf: "config/rpi0/fwup.conf"
+   fwup_conf: "config/rpi0/fwup.conf"
 
-config :logger, backends: [RingLogger]
+
 
 config :shoehorn,
   init: [:nerves_runtime, :nerves_pack],
   app: Mix.Project.config()[:app]
+
+config :logger, backends: [RingLogger]
 
 config :mdns_lite,
   # The `host` key specifies what hostnames mdns_lite advertises.  `:hostname`
