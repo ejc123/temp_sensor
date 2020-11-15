@@ -33,7 +33,7 @@ regulatory_domain: "US",
       },
       ipv4: %{method: :dhcp},
       },
-    }
+    },
     {"usb0", %{type: VintageNetDirect}},
   ]
 

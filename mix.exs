@@ -3,7 +3,7 @@ defmodule TempSensor.MixProject do
 
   @app :temp_sensor
   @version "0.2.0"
-  @all_targets [:rpi3]
+  @all_targets [:rpi0]
 
   def project do
     [
@@ -47,6 +47,7 @@ defmodule TempSensor.MixProject do
       {:vintage_net_wifi, "~> 0.7"},
       {:vintage_net_direct, "~> 0.7"},
       {:nerves_pack, "~> 0.1.0"},
+      {:busybox, "~> 0.1" },
       {:nerves_system_rpi0, "~> 1.8", runtime: false},
     ]
   end
