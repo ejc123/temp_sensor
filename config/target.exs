@@ -1,4 +1,14 @@
-use Mix.Config
+import Config
+
+# Use shoehorn to start the main application. See the shoehorn
+# docs for separating out critical OTP applications such as those
+# involved with firmware updates.
+
+config :shoehorn,
+  init: [:nerves_runtime, :nerves_pack],
+  app: Mix.Project.config()[:app]
+
+config :nerves_runtime, :kernel, use_system_registry: false
 
 keys =
   [
@@ -15,25 +25,35 @@ if keys == [],
     See your project's config.exs for this error message.
     """)
 
-config :nerves_firmware_ssh,
+config :nerves_ssh,
   authorized_keys: Enum.map(keys, &File.read!/1)
 
-
-key_mgmt = System.get_env("NERVES_NETWORK_KEY_MGMT") || "wpa_psk"
-
 config :vintage_net,
-regulatory_domain: "US",
+  regulatory_domain: "US",
   config: [
-    {"wlan0", %{ type: VintageNetWiFi,
-      vintage_net_wifi: %{
-        key_mgmt: String.to_atom(key_mgmt),
-        mode: :client,
-        ssid: System.get_env("NERVES_NETWORK_SSID"),
-        psk:  System.get_env("NERVES_NETWORK_PSK"),
-      },
-      ipv4: %{method: :dhcp},
-      },
-    },
-    {"usb0", %{type: VintageNetDirect}},
+    {"usb0", %{type: VintageNetDirect}}
   ]
 
+config :mdns_lite,
+  host: [:hostname, "lights"],
+  ttl: 120,
+  services: [
+    %{
+      name: "SSH Remote Login Protocol",
+      protocol: "ssh",
+      transport: "tcp",
+      port: 22
+    },
+    %{
+      name: "Web Server",
+      protocol: "http",
+      transport: "tcp",
+      port: 80
+    },
+    %{
+      name: "Erlang Port Mapper Daemon",
+      protocol: "epmd",
+      transport: "tcp",
+      port: 4369
+    }
+  ]

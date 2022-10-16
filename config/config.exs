@@ -3,57 +3,35 @@
 #
 # This configuration file is loaded before any dependency and
 # is restricted to this project.
-use Mix.Config
+import Config
+
+Application.start(:nerves_bootstrap)
 
 config :temp_sensor, target: Mix.target()
 
-# Customize the firmware. Uncomment all or parts of the following
-# to add files to the root filesystem or modify the firmware
-# archive.
+# Customize non-Elixir parts of the firmware. See
+# https://hexdocs.pm/nerves/advanced-configuration.html for details.
 
-config :nerves, :firmware, 
-   rootfs_overlay: "rootfs_overlay",
-   fwup_conf: "config/rpi0/fwup.conf"
+config :nerves, :firmware,
+  rootfs_overlay: "rootfs_overlay",
+  provisioning: "config/provisioning.conf",
+  fwup_conf: "config/rpi3a/fwup.conf"
 
+config :nerves, source_date_epoch: "1585625975"
 
+config :nerves, rpi_v2_ack: true
 
-config :shoehorn,
-  init: [:nerves_runtime, :nerves_pack],
-  app: Mix.Project.config()[:app]
+config :logger,
+  backends: [{LoggerFileBackend, :info_log}, {LoggerFileBackend, :error_log}, RingLogger],
+  level: :info
 
-config :logger, backends: [RingLogger]
+config :logger, :info_log,
+  path: "/root/info.log",
+  level: :info
 
-config :mdns_lite,
-  # The `host` key specifies what hostnames mdns_lite advertises.  `:hostname`
-  # advertises the device's hostname.local. For the official Nerves systems, this
-  # is "nerves-<4 digit serial#>.local".  mdns_lite also advertises
-  # "nerves.local" for convenience. If more than one Nerves device is on the
-  # network, delete "nerves" from the list.
-
-  host: [:hostname, "nerves"],
-  ttl: 120,
-
-  # Advertise the following services over mDNS.
-  services: [
-    %{
-      name: "SSH Remote Login Protocol",
-      protocol: "ssh",
-      transport: "tcp",
-      port: 22
-    },
-    %{
-      name: "Secure File Transfer Protocol over SSH",
-      protocol: "sftp-ssh",
-      transport: "tcp",
-      port: 22
-    },
-    %{
-      name: "Erlang Port Mapper Daemon",
-      protocol: "epmd",
-      transport: "tcp",
-      port: 4369
-    }
-  ]
+config :logger, :error_log,
+  path: "/root/error.log",
+  level: :error
 
 if Mix.target() != :host do
   import_config "target.exs"

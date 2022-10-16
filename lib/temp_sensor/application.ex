@@ -6,33 +6,49 @@ defmodule TempSensor.Application do
   """
 
   require Logger
-  # for more information on OTP Applications
-  @base_dir "/sys/bus/w1/devices/"
 
   def start(_type, _args) do
+    if target() != :host do
+      setup_wifi()
+    end
 
-    Logger.debug "Start temperature measurement"
+    opts = [strategy: :one_for_one, name: TempSensor.Supervisor]
 
-    spawn(fn -> read_temp_forever() end)
+    children = [TempSensor.Reader]
 
-    {:ok, self()}
+    Supervisor.start_link(children, opts)
   end
 
-  def read_temp_forever do
-    File.ls!(@base_dir)
-    |> Enum.filter(&(String.starts_with?(&1, "28-")))
-    |> Enum.each(&read_temp(&1, @base_dir))
+  defp setup_wifi() do
+    kv = Nerves.Runtime.KV.get_all()
 
-    :timer.sleep(1000)
-    read_temp_forever()
+    if true?(kv["wifi_force"]) or wlan0_unconfigured?() do
+      ssid = kv["wifi_ssid"]
+      passphrase = kv["wifi_passphrase"]
+
+      unless empty?(ssid) do
+        _ = VintageNetWiFi.quick_configure(ssid, passphrase)
+        :ok
+      end
+    end
   end
 
-  defp read_temp(sensor, base_dir) do
-    sensor_data = File.read!("#{base_dir}#{sensor}/w1_slave")
-    #Logger.debug("reading sensor: #{sensor}: #{sensor_data}")
-    {temp, _} = Regex.run(~r/t=(\d+)/, sensor_data)
-    |> List.last
-    |> Float.parse
-    Logger.debug("#{sensor}: #{temp/1000} C")
+  defp wlan0_unconfigured?() do
+    "wlan0" in VintageNet.configured_interfaces() and
+      VintageNet.get_configuration("wlan0") == %{type: VintageNetWiFi}
+  end
+
+  defp true?(""), do: false
+  defp true?(nil), do: false
+  defp true?("false"), do: false
+  defp true?("FALSE"), do: false
+  defp true?(_), do: true
+
+  defp empty?(""), do: true
+  defp empty?(nil), do: true
+  defp empty?(_), do: false
+
+  def target() do
+    Application.get_env(:fw, :target)
   end
 end
