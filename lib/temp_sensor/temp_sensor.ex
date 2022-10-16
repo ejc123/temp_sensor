@@ -36,10 +36,7 @@ defmodule TempSensor.Reader do
     Enum.each(
       temps,
       fn
-        {_, {false, _}} ->
-          nil
-
-        {sensor, {true, temperature}} ->
+        {sensor, temperature} ->
           Logger.info("Sensor: #{sensor} Temperature: #{temperature / 1000} C")
       end
     )
@@ -48,23 +45,21 @@ defmodule TempSensor.Reader do
   end
 
   @impl GenServer
-  def handle_info(:read_sensors, %State{temps: old_temps} = state) do
+  def handle_info(:read_sensors, state) do
     new_temps =
       File.ls!(@base_dir)
       |> Enum.filter(&String.starts_with?(&1, "28-"))
-      |> Enum.reduce(%{}, fn val, accum ->
-        temp = read_temp(val)
+      |> Enum.reduce(%{}, fn sensor, accum ->
+        temp = read_temp(sensor)
 
         case temp do
           :error ->
             accum
 
           {:ok, t} ->
-            {_, old} = Map.get(old_temps, val, {nil, nil})
-
             Map.merge(
               accum,
-              %{val => {old != t, t}}
+              %{sensor => t}
             )
         end
       end)
