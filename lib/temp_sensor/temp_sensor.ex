@@ -9,7 +9,7 @@ defmodule TempSensor.Reader do
   @default_time 1000
 
   defmodule State do
-    defstruct [:timer, :temp]
+    defstruct [:timer, :temps]
   end
 
   def start_link(opts \\ []) do
@@ -23,7 +23,7 @@ defmodule TempSensor.Reader do
 
     state = %State{
       timer: ref,
-      temp: []
+      temps: %{}
     }
 
     Logger.info("Starting reader")
@@ -32,31 +32,56 @@ defmodule TempSensor.Reader do
   end
 
   @impl GenServer
-  def handle_cast(:temperature, state) do
-    Enum.map(state.temp,
-    fn {sensor, temperature} ->
-    IO.puts("Sensor: #{sensor} Temperature: #{temperature / 1000} C")
-  end)
+  def handle_cast(:temperature, %State{temps: temps} = state) do
+    Enum.each(
+      temps,
+      fn
+        {_, {false, _}} ->
+          nil
+
+        {sensor, {true, temperature}} ->
+          Logger.info("Sensor: #{sensor} Temperature: #{temperature / 1000} C")
+      end
+    )
+
     {:noreply, state}
   end
 
   @impl GenServer
-  def handle_info(:read_sensors, state) do
-    temp =
+  def handle_info(:read_sensors, %State{temps: old_temps} = state) do
+    new_temps =
       File.ls!(@base_dir)
       |> Enum.filter(&String.starts_with?(&1, "28-"))
-      |> Enum.map(&read_temp(&1, @base_dir))
+      |> Enum.reduce(%{}, fn val, accum ->
+        temp = read_temp(val)
 
-    {:noreply, %State{state | temp: temp}}
+        case temp do
+          :error ->
+            accum
+
+          {:ok, t} ->
+            {_, old} = Map.get(old_temps, val, {nil, nil})
+
+            Map.merge(
+              accum,
+              %{val => {old != t, t}}
+            )
+        end
+      end)
+
+    {:noreply, %State{state | temps: new_temps}}
   end
 
-  defp read_temp(sensor, base_dir) do
-    temp =
-      File.read!("#{base_dir}#{sensor}/temperature")
-      |> String.trim()
-      |> String.to_integer()
+  defp read_temp(sensor) do
+    with {:ok, temp} <- File.read("#{@base_dir}#{sensor}/temperature") do
+      formatted =
+        temp
+        |> String.trim()
+        |> String.to_integer()
 
-    Logger.info("#{sensor}: #{temp / 1000} C")
-    {sensor, temp}
+      {:ok, formatted}
+    else
+      {:error, _} -> :error
+    end
   end
 end

@@ -7,16 +7,11 @@ defmodule TempSensor.MixProject do
 
   def project do
     [
-      app: :temp_sensor,
-      version: "0.1.0",
-      elixir: "~> 1.8",
-      target: @target,
-      archives: [nerves_bootstrap: "~> 1.0"],
-      deps_path: "deps/#{@target}",
-      build_path: "_build/#{@target}",
-      lockfile: "mix.lock.#{@target}",
-      build_embedded: Mix.env() == :prod,
-      start_permanent: Mix.env() == :prod,
+      app: @app,
+      version: @version,
+      elixir: "~> 1.13",
+      archives: [nerves_bootstrap: "~> 1.10"],
+      start_permanent: Mix.env == :prod,
       build_embedded: true,
       deps: deps(),
       releases: [{@app, release()}],
@@ -55,14 +50,13 @@ defmodule TempSensor.MixProject do
       {:toolshed, "~> 0.2"},
       {:ring_logger, "~> 0.8"},
       {:logger_file_backend, "~> 0.0.12"},
-      {:elixir_ale, "~> 1.0"},
       {:nerves_runtime, "~> 0.11.4", targets: @all_targets},
       {:nerves_pack, "~> 0.6.0", targets: @all_targets},
       {:busybox, "~> 0.1.5", targets: @all_targets},
 
       # Dependencies for specific targets
       {:nerves_system_rpi0, "~> 1.18", runtime: false, targets: :rpi0},
-      {:nerves_system_rpi3a, "~> 1.18", runtime: false, targets: :rpi3a}
+      {:nerves_system_rpi3a, "~> 1.18", runtime: false, targets: :rpi3a},
     ]
   end
 
