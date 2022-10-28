@@ -14,7 +14,7 @@ defmodule TempSensor.Application do
 
     opts = [strategy: :one_for_one, name: TempSensor.Supervisor]
 
-    children = [TempSensor.Reader]
+    children = [{TempSensor.Reader, 1000}]
 
     Supervisor.start_link(children, opts)
   end

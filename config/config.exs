@@ -15,7 +15,7 @@ config :temp_sensor, target: Mix.target()
 config :nerves, :firmware,
   rootfs_overlay: "rootfs_overlay",
   provisioning: "config/provisioning.conf",
-  fwup_conf: "config/rpi3a/fwup.conf"
+  fwup_conf: "config/#{Mix.target()}/fwup.conf"
 
 config :nerves, source_date_epoch: "1585625975"
 
